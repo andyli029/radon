@@ -19,6 +19,7 @@ import (
 	"proxy"
 	"runtime"
 	"syscall"
+	"monitor"
 
 	"github.com/xelabs/go-mysqlstack/xlog"
 )
@@ -56,6 +57,9 @@ func main() {
 		log.Panic("radon.load.config.error[%v]", err)
 	}
 	log.SetLevel(conf.Log.Level)
+
+	// Monitor
+	monitor.Start("", "")
 
 	// Proxy.
 	proxy := proxy.NewProxy(log, flag_conf, conf)
