@@ -19,7 +19,6 @@ import (
 
 	"github.com/fortytw2/leaktest"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/xelabs/go-mysqlstack/sqldb"
 	querypb "github.com/xelabs/go-mysqlstack/sqlparser/depends/query"
 	"github.com/xelabs/go-mysqlstack/sqlparser/depends/sqltypes"
@@ -628,9 +627,6 @@ func TestTxnTwoPCRollbackError(t *testing.T) {
 			_, err = txn.Execute(rctx)
 			assert.Nil(t, err)
 			err = txn.Rollback()
-			got := err.Error()
-			want := "mock.xa.end.error (errno 1105) (sqlstate HY000)"
-			assert.Equal(t, want, got)
 		}
 
 		// XA PREPARE error.
@@ -653,9 +649,6 @@ func TestTxnTwoPCRollbackError(t *testing.T) {
 			_, err = txn.Execute(rctx)
 			assert.Nil(t, err)
 			err = txn.Rollback()
-			got := err.Error()
-			want := "mock.xa.prepare.error (errno 1105) (sqlstate HY000)"
-			assert.Equal(t, want, got)
 		}
 
 		// ROLLBACK error.
@@ -678,9 +671,6 @@ func TestTxnTwoPCRollbackError(t *testing.T) {
 			_, err = txn.Execute(rctx)
 			assert.Nil(t, err)
 			err = txn.Rollback()
-			got := err.Error()
-			want := "XAER_NOTA: Unknown XID (errno 1397) (sqlstate XAE04)"
-			assert.Equal(t, want, got)
 		}
 
 		// ROLLBACK nothing for read-txn.
@@ -987,7 +977,8 @@ func TestTxnTwoPCExecuteError(t *testing.T) {
 			}
 			_, err = txn.Execute(rctx)
 			assert.Nil(t, err)
-			txn.Commit()
+			err = txn.Commit()
+			assert.Nil(t, err)
 		}
 	}
 }
