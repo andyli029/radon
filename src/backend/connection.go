@@ -85,7 +85,6 @@ func NewConnection(log *xlog.Log, pool *Pool) Connection {
 func (c *connection) Dial() error {
 	var err error
 	defer mysqlStats.Record("conn.dial", time.Now())
-	defer monitor.BackendConnectionInc(c.address)
 
 	if c.driver, err = driver.NewConn(c.user, c.password, c.address, "", c.charset); err != nil {
 		c.log.Error("conn[%s].dial.error:%+v", c.address, err)
@@ -94,6 +93,7 @@ func (c *connection) Dial() error {
 		return errors.New("Server maybe lost, please try again")
 	}
 	c.connectionID = c.driver.ConnectionID()
+	monitor.BackendConnectionInc(c.address)
 	return nil
 }
 
@@ -252,10 +252,10 @@ func (c *connection) Address() string {
 // Close used to close connection.
 func (c *connection) Close() {
 	defer mysqlStats.Record("conn.close", time.Now())
-	defer monitor.BackendConnectionDec(c.address)
 	c.lastErr = errors.New("I.am.closed")
 	if c.driver != nil {
 		c.driver.Close()
+		monitor.BackendConnectionDec(c.address)
 	}
 }
 
