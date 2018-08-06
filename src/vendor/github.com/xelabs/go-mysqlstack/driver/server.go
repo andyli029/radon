@@ -10,16 +10,17 @@
 package driver
 
 import (
+	"io"
 	"net"
 	"runtime"
 	"runtime/debug"
+
 	"monitor"
 
 	"github.com/xelabs/go-mysqlstack/common"
 	"github.com/xelabs/go-mysqlstack/sqldb"
-	"github.com/xelabs/go-mysqlstack/xlog"
-
 	"github.com/xelabs/go-mysqlstack/sqlparser/depends/sqltypes"
+	"github.com/xelabs/go-mysqlstack/xlog"
 )
 
 // Handler interface.
@@ -180,44 +181,17 @@ func (l *Listener) handle(conn net.Conn, ID uint32) {
 			return
 		}
 
-		switch data[0] {
-		case sqldb.COM_QUIT:
-			return
-		case sqldb.COM_INIT_DB:
-			db := l.parserComInitDB(data)
-			if err = l.handler.ComInitDB(session, db); err != nil {
-				if werr := session.writeErrFromError(err); werr != nil {
-					return
-				}
+		isSuccess := false
+		if isSuccess, err = l.handleData(data, session); err != nil {
+			if err == io.EOF {
+				l.queryStat(data[0], true)
 			} else {
-				session.SetSchema(db)
-				if err = session.packets.WriteOK(0, 0, session.greeting.Status(), 0); err != nil {
-					return
-				}
+				l.queryStat(data[0], false)
 			}
-		case sqldb.COM_PING:
-			if err = session.packets.WriteOK(0, 0, session.greeting.Status(), 0); err != nil {
-				return
-			}
-		case sqldb.COM_QUERY:
-			query := l.parserComQuery(data)
-			if err = l.handler.ComQuery(session, query, func(qr *sqltypes.Result) error {
-				return session.writeResult(qr)
-			}); err != nil {
-				log.Error("server.handle.query.from.session[%v].error:%+v.query[%s]", ID, err, query)
-				if werr := session.writeErrFromError(err); werr != nil {
-					return
-				}
-				continue
-			}
-		default:
-			cmd := sqldb.CommandString(data[0])
-			log.Error("session.command:%s.not.implemented", cmd)
-			sqlErr := sqldb.NewSQLError(sqldb.ER_UNKNOWN_ERROR, "command handling not implemented yet: %s", cmd)
-			if err := session.writeErrFromError(sqlErr); err != nil {
-				return
-			}
+			return
 		}
+		l.queryStat(data[0], isSuccess)
+
 		// Reset packet sequence ID.
 		session.packets.ResetSeq()
 	}
@@ -231,4 +205,57 @@ func (l *Listener) Addr() string {
 // Close close the listener and all connections.
 func (l *Listener) Close() {
 	l.listener.Close()
+}
+
+//if the sql handle success return true, else return false.
+func (l *Listener) handleData(data []byte, s *Session) (bool, error) {
+	var err error
+	switch data[0] {
+	case sqldb.COM_QUIT:
+		return true, io.EOF
+	case sqldb.COM_INIT_DB:
+		db := l.parserComInitDB(data)
+		if err = l.handler.ComInitDB(s, db); err != nil {
+			return false, s.writeErrFromError(err)
+		}
+		s.SetSchema(db)
+		return true, s.packets.WriteOK(0, 0, s.greeting.Status(), 0)
+	case sqldb.COM_PING:
+		return true, s.packets.WriteOK(0, 0, s.greeting.Status(), 0)
+	case sqldb.COM_QUERY:
+		query := l.parserComQuery(data)
+		if err = l.handler.ComQuery(s, query, func(qr *sqltypes.Result) error {
+			return s.writeResult(qr)
+		}); err != nil {
+			s.log.Error("server.handle.query.from.session[%v].error:%+v.query[%s]", s.id, err, query)
+			return false, s.writeErrFromError(err)
+		}
+	default:
+		cmd := sqldb.CommandString(data[0])
+		s.log.Error("session.command:%s.not.implemented", cmd)
+		sqlErr := sqldb.NewSQLError(sqldb.ER_UNKNOWN_ERROR, "command handling not implemented yet: %s", cmd)
+		return false, s.writeErrFromError(sqlErr)
+	}
+	return true, nil
+}
+
+func (l *Listener) queryStat(cmd byte, isSuccess bool) {
+	var command string
+	switch cmd {
+	case sqldb.COM_QUIT:
+		command = "Quit"
+	case sqldb.COM_INIT_DB:
+		command = "InitDB"
+	case sqldb.COM_PING:
+		command = "Ping"
+	case sqldb.COM_QUERY:
+		command = "Query"
+	default:
+		command = "Unsupport"
+	}
+	if isSuccess {
+		monitor.QueryTotalCounterInc(command, "OK")
+	} else {
+		monitor.QueryTotalCounterInc(command, "Error")
+	}
 }
