@@ -181,16 +181,15 @@ func (l *Listener) handle(conn net.Conn, ID uint32) {
 			return
 		}
 
-		isSuccess := false
-		if isSuccess, err = l.handleData(data, session); err != nil {
+		if err = l.handleData(data, session); err != nil {
 			if err == io.EOF {
-				l.queryStat(data[0], true)
+				l.queryStat(data[0], err)
 			} else {
-				l.queryStat(data[0], false)
+				l.queryStat(data[0], err)
 			}
 			return
 		}
-		l.queryStat(data[0], isSuccess)
+		l.queryStat(data[0], err)
 
 		// Reset packet sequence ID.
 		session.packets.ResetSeq()
@@ -208,38 +207,38 @@ func (l *Listener) Close() {
 }
 
 //if the sql handle success return true, else return false.
-func (l *Listener) handleData(data []byte, s *Session) (bool, error) {
+func (l *Listener) handleData(data []byte, s *Session) (error) {
 	var err error
 	switch data[0] {
 	case sqldb.COM_QUIT:
-		return true, io.EOF
+		return io.EOF
 	case sqldb.COM_INIT_DB:
 		db := l.parserComInitDB(data)
 		if err = l.handler.ComInitDB(s, db); err != nil {
-			return false, s.writeErrFromError(err)
+			return s.writeErrFromError(err)
 		}
 		s.SetSchema(db)
-		return true, s.packets.WriteOK(0, 0, s.greeting.Status(), 0)
+		return s.packets.WriteOK(0, 0, s.greeting.Status(), 0)
 	case sqldb.COM_PING:
-		return true, s.packets.WriteOK(0, 0, s.greeting.Status(), 0)
+		return s.packets.WriteOK(0, 0, s.greeting.Status(), 0)
 	case sqldb.COM_QUERY:
 		query := l.parserComQuery(data)
 		if err = l.handler.ComQuery(s, query, func(qr *sqltypes.Result) error {
 			return s.writeResult(qr)
 		}); err != nil {
 			s.log.Error("server.handle.query.from.session[%v].error:%+v.query[%s]", s.id, err, query)
-			return false, s.writeErrFromError(err)
+			return s.writeErrFromError(err)
 		}
 	default:
 		cmd := sqldb.CommandString(data[0])
 		s.log.Error("session.command:%s.not.implemented", cmd)
 		sqlErr := sqldb.NewSQLError(sqldb.ER_UNKNOWN_ERROR, "command handling not implemented yet: %s", cmd)
-		return false, s.writeErrFromError(sqlErr)
+		return s.writeErrFromError(sqlErr)
 	}
-	return true, nil
+	return nil
 }
 
-func (l *Listener) queryStat(cmd byte, isSuccess bool) {
+func (l *Listener) queryStat(cmd byte, err error) {
 	var command string
 	switch cmd {
 	case sqldb.COM_QUIT:
@@ -253,7 +252,7 @@ func (l *Listener) queryStat(cmd byte, isSuccess bool) {
 	default:
 		command = "Unsupport"
 	}
-	if isSuccess {
+	if err == nil  {
 		monitor.QueryTotalCounterInc(command, "OK")
 	} else {
 		monitor.QueryTotalCounterInc(command, "Error")
