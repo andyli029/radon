@@ -16,6 +16,7 @@ import (
 	"sync"
 
 	"config"
+	"monitor"
 
 	"github.com/pkg/errors"
 
@@ -56,6 +57,7 @@ func (scatter *Scatter) add(config *config.BackendConfig) error {
 	}
 	pool := NewPool(scatter.log, config)
 	scatter.backends[config.Name] = pool
+	monitor.BackendInc("backend")
 	return nil
 }
 
@@ -75,6 +77,7 @@ func (scatter *Scatter) remove(config *config.BackendConfig) error {
 		return errors.Errorf("scatter.backend[%v].can.not.be.found", config.Name)
 	}
 	delete(scatter.backends, config.Name)
+	monitor.BackendDec("backend")
 	pool.Close()
 	return nil
 }
@@ -96,6 +99,7 @@ func (scatter *Scatter) addBackup(config *config.BackendConfig) error {
 
 	pool := NewPool(scatter.log, config)
 	scatter.backup = pool
+	monitor.BackendInc("backup")
 	return nil
 }
 
@@ -111,6 +115,7 @@ func (scatter *Scatter) removeBackup(config *config.BackendConfig) error {
 	log := scatter.log
 	log.Warning("scatter.remove.backup:%v", config.Name)
 	if scatter.backup != nil && scatter.backup.conf.Name == config.Name {
+		monitor.BackendDec("backup")
 		scatter.backup.Close()
 		scatter.backup = nil
 	} else {
