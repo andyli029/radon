@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"backend"
-	"monitor"
 
 	"github.com/xelabs/go-mysqlstack/driver"
 	"github.com/xelabs/go-mysqlstack/sqlparser"
@@ -53,7 +52,6 @@ func (ss *Sessions) Add(s *driver.Session) {
 	ss.sessions[s.ID()] = &session{
 		session:   s,
 		timestamp: time.Now().Unix()}
-	monitor.ClientConnectionInc(s.User())
 }
 
 func (ss *Sessions) txnAbort(txn backend.Transaction, node sqlparser.Statement) {
@@ -91,7 +89,6 @@ func (ss *Sessions) Remove(s *driver.Session) {
 	node := session.node
 	session.mu.Unlock()
 	delete(ss.sessions, s.ID())
-	monitor.ClientConnectionDec(s.User())
 	ss.mu.Unlock()
 
 	// txn abort.
