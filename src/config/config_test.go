@@ -19,11 +19,12 @@ import (
 
 func TestWriteConfig(t *testing.T) {
 	conf := &Config{
-		Proxy:  MockProxyConfig,
-		Log:    MockLogConfig,
-		Audit:  DefaultAuditConfig(),
-		Binlog: DefaultBinlogConfig(),
-		Router: DefaultRouterConfig(),
+		Proxy:   MockProxyConfig,
+		Log:     MockLogConfig,
+		Audit:   DefaultAuditConfig(),
+		Binlog:  DefaultBinlogConfig(),
+		Router:  DefaultRouterConfig(),
+		Monitor: DefaultMonitorConfig(),
 	}
 
 	path := "/tmp/radon.test.config.json"
@@ -54,11 +55,12 @@ func TestLoadConfig(t *testing.T) {
 			BackupDefaultEngine: "TokuDB",
 		}
 		conf := &Config{
-			Proxy:  mockProxyConfig,
-			Audit:  DefaultAuditConfig(),
-			Router: DefaultRouterConfig(),
-			Binlog: DefaultBinlogConfig(),
-			Log:    MockLogConfig,
+			Proxy:   mockProxyConfig,
+			Audit:   DefaultAuditConfig(),
+			Router:  DefaultRouterConfig(),
+			Binlog:  DefaultBinlogConfig(),
+			Monitor: DefaultMonitorConfig(),
+			Log:     MockLogConfig,
 		}
 
 		path := "/tmp/radon.test.config.json"
@@ -87,11 +89,12 @@ func TestLoadConfig(t *testing.T) {
 		assert.Nil(t, err)
 		{
 			want := &Config{
-				Proxy:  MockProxyConfig,
-				Log:    MockLogConfig,
-				Audit:  DefaultAuditConfig(),
-				Binlog: DefaultBinlogConfig(),
-				Router: DefaultRouterConfig(),
+				Proxy:   MockProxyConfig,
+				Log:     MockLogConfig,
+				Audit:   DefaultAuditConfig(),
+				Binlog:  DefaultBinlogConfig(),
+				Router:  DefaultRouterConfig(),
+				Monitor: DefaultMonitorConfig(),
 			}
 			got, err := LoadConfig(path)
 			assert.Nil(t, err)
@@ -101,11 +104,12 @@ func TestLoadConfig(t *testing.T) {
 
 	{
 		want := &Config{
-			Proxy:  MockProxyConfig,
-			Log:    MockLogConfig,
-			Audit:  DefaultAuditConfig(),
-			Router: DefaultRouterConfig(),
-			Binlog: DefaultBinlogConfig(),
+			Proxy:   MockProxyConfig,
+			Log:     MockLogConfig,
+			Audit:   DefaultAuditConfig(),
+			Router:  DefaultRouterConfig(),
+			Binlog:  DefaultBinlogConfig(),
+			Monitor: DefaultMonitorConfig(),
 		}
 
 		path := "/tmp/radon.test.config.json"
@@ -132,11 +136,12 @@ func TestWriteLoadConfig(t *testing.T) {
 		conf, err := LoadConfig(path)
 		assert.Nil(t, err)
 		want := &Config{
-			Proxy:  MockProxyConfig,
-			Log:    MockLogConfig,
-			Audit:  DefaultAuditConfig(),
-			Router: DefaultRouterConfig(),
-			Binlog: DefaultBinlogConfig(),
+			Proxy:   MockProxyConfig,
+			Log:     MockLogConfig,
+			Audit:   DefaultAuditConfig(),
+			Router:  DefaultRouterConfig(),
+			Binlog:  DefaultBinlogConfig(),
+			Monitor: DefaultMonitorConfig(),
 		}
 		got := conf
 		assert.Equal(t, want, got)
@@ -261,11 +266,12 @@ func TestRouterConfigUnmarshalJSON(t *testing.T) {
 		got, err := LoadConfig(path)
 		assert.Nil(t, err)
 		want := &Config{
-			Proxy:  DefaultProxyConfig(),
-			Router: DefaultRouterConfig(),
-			Audit:  DefaultAuditConfig(),
-			Binlog: DefaultBinlogConfig(),
-			Log:    DefaultLogConfig(),
+			Proxy:   DefaultProxyConfig(),
+			Router:  DefaultRouterConfig(),
+			Audit:   DefaultAuditConfig(),
+			Binlog:  DefaultBinlogConfig(),
+			Monitor: DefaultMonitorConfig(),
+			Log:     DefaultLogConfig(),
 		}
 		assert.Equal(t, want, got)
 	}
@@ -301,11 +307,12 @@ func TestRouterConfigUnmarshalJSON(t *testing.T) {
 		proxy := DefaultProxyConfig()
 		proxy.Endpoint = ":5566"
 		want := &Config{
-			Proxy:  proxy,
-			Router: DefaultRouterConfig(),
-			Audit:  DefaultAuditConfig(),
-			Binlog: DefaultBinlogConfig(),
-			Log:    DefaultLogConfig(),
+			Proxy:   proxy,
+			Router:  DefaultRouterConfig(),
+			Audit:   DefaultAuditConfig(),
+			Binlog:  DefaultBinlogConfig(),
+			Log:     DefaultLogConfig(),
+			Monitor: DefaultMonitorConfig(),
 		}
 		assert.Equal(t, want, got)
 	}
