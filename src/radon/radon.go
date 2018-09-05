@@ -60,7 +60,7 @@ func main() {
 	log.SetLevel(conf.Log.Level)
 
 	// Monitor
-	monitor.Start("", "")
+	monitor.Start(log, conf.Monitor)
 
 	// Proxy.
 	proxy := proxy.NewProxy(log, flag_conf, conf)
