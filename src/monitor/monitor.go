@@ -34,11 +34,29 @@ var (
 		},
 		[]string{"address"},
 	)
+
+	backendNum = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "backend_number",
+			Help: "backend Number",
+		},
+		[]string{"type"},
+	)
+
+	diskUsage = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "disk_usage",
+			Help: "disk usage",
+		},
+		[]string{"description"},
+	)
 )
 
 func init() {
 	prometheus.MustRegister(clientConnectionNum)
 	prometheus.MustRegister(backendConnectionNum)
+	prometheus.MustRegister(backendNum)
+	prometheus.MustRegister(diskUsage)
 }
 
 // Start monitor
@@ -74,4 +92,19 @@ func BackendConnectionInc(address string) {
 // BackendConnectionDec dec 1
 func BackendConnectionDec(address string) {
 	backendConnectionNum.WithLabelValues(address).Dec()
+}
+
+// BackendInc add 1
+func BackendInc(btype string) {
+	backendNum.WithLabelValues(btype).Inc()
+}
+
+// BackendDec dec 1
+func BackendDec(btype string) {
+	backendNum.WithLabelValues(btype).Dec()
+}
+
+// DiskUsageSet set usage of disk
+func DiskUsageSet(v float64) {
+	diskUsage.WithLabelValues("percent").Set(v)
 }
