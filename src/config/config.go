@@ -30,6 +30,7 @@ type ProxyConfig struct {
 	QueryTimeout        int    `json:"query-timeout"`
 	PeerAddress         string `json:"peer-address,omitempty"`
 	BackupDefaultEngine string `json:"backup-default-engine"`
+	LongQueryTime       int    `json:"long-query-time"`
 }
 
 // DefaultProxyConfig returns default proxy config.
@@ -43,6 +44,7 @@ func DefaultProxyConfig() *ProxyConfig {
 		QueryTimeout:        5 * 60 * 1000,      // 5minutes
 		PeerAddress:         "127.0.0.1:8080",
 		BackupDefaultEngine: "TokuDB", // Default MySQL storage engine for backup.
+		LongQueryTime:       5,
 	}
 }
 
@@ -147,17 +149,13 @@ func (c *LogConfig) UnmarshalJSON(b []byte) error {
 
 // MonitorConfig tuple
 type MonitorConfig struct {
-	WebMonitorPort string `json:web-monitor-port`
-	WebMonitorAddr string `json:web-monitor-addr`
-	WebMonitorURL  string `json:web-monitor-url`
+	MonitorAddress string `json:monitor-address`
 }
 
 // DefaultMonitorConfig returns default monitor config.
 func DefaultMonitorConfig() *MonitorConfig {
 	return &MonitorConfig{
-		WebMonitorPort: "13308",
-		WebMonitorAddr: "0.0.0.0",
-		WebMonitorURL:  "/metrics",
+		MonitorAddress: "0.0.0.0:13308",
 	}
 }
 

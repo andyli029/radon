@@ -2,7 +2,8 @@
         "proxy": {
                 "endpoint": ":3308",
                 "meta-dir": "bin/radon-meta",
-                "peer-address": ":8080"
+                "peer-address": ":8080",
+                "long-query-time": "5"
         },
         "binlog": {
                 "binlog-dir": "bin/radon-binlog"
@@ -14,6 +15,6 @@
                 "level": "INFO"
         },
         "monitor": {
-            "web-monitor-port": "13308"
+            "monitor-address": "0.0.0.0:13308"
         }
 }
