@@ -71,7 +71,7 @@ func (p *DeletePlan) analyze() error {
 		return errors.New("unsupported: subqueries.in.delete")
 	}
 	if node.Where == nil {
-		return errors.New("unsupported: missing.where.clause.in.DML")
+		//return errors.New("unsupported: missing.where.clause.in.DML")
 	}
 	return nil
 }
