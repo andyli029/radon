@@ -873,10 +873,11 @@ type Show struct {
 	Where    *Where
 }
 
-// The frollowing constants represent SHOW statements.
+// The following constants represent SHOW statements.
 const (
 	ShowDatabasesStr      = "databases"
 	ShowCreateDatabaseStr = "create database"
+	ShowTableStatusStr    = "table status"
 	ShowTablesStr         = "tables"
 	ShowColumnsStr        = "columns"
 	ShowTablesFromStr     = "tables from"
@@ -899,6 +900,11 @@ func (node *Show) Format(buf *TrackedBuffer) {
 	switch node.Type {
 	case ShowCreateDatabaseStr:
 		buf.Myprintf("show %s %v", node.Type, node.Database)
+	case ShowTableStatusStr:
+		buf.Myprintf("show %s", node.Type)
+		if node.Database.Name.String() != "" {
+			buf.Myprintf(" from %s", node.Database.Name.String())
+		}
 	case ShowCreateTableStr:
 		buf.Myprintf("show %s %v", node.Type, node.Table)
 	case ShowTablesFromStr:

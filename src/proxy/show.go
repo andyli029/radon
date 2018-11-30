@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -43,6 +44,57 @@ func (spanner *Spanner) handleShowCreateDatabase(session *driver.Session, query 
 func (spanner *Spanner) handleShowTablesWrapper(session *driver.Session, query string, node sqlparser.Statement) (*sqltypes.Result, error) {
 	// TODO(andy): need to support: SHOW [FULL] TABLES [FROM db_name] [like_or_where]
 	return spanner.handleShowTables(session, query, node)
+}
+
+// handleShowTableStatus used to handle the 'SHOW TABLE STATUS' command.
+func (spanner *Spanner) handleShowTableStatus(session *driver.Session, query string, node sqlparser.Statement) (*sqltypes.Result, error) {
+	router := spanner.router
+	ast := node.(*sqlparser.Show)
+
+	database := session.Schema()
+	if !ast.Database.IsEmpty() {
+		database = ast.Database.Name.String()
+	}
+
+	if database == "" {
+		return nil, sqldb.NewSQLError(sqldb.ER_NO_DB_ERROR, "")
+	}
+	// Check the database ACL.
+	if err := router.DatabaseACL(database); err != nil {
+		return nil, err
+	}
+
+	rewritten := fmt.Sprintf("SHOW TABLE STATUS from %s", database)
+	qr, err := spanner.ExecuteSingle(rewritten)
+	if err != nil {
+		return nil, err
+	}
+
+	newqr := &sqltypes.Result{}
+	tables := make(map[string]string)
+	for _, row := range qr.Rows {
+		name := string(row[0].Raw())
+		var valid = regexp.MustCompile("_[0-9]{4}$")
+		Suffix := valid.FindAllStringSubmatch(name, -1)
+		var new string
+		if len(Suffix) != 0 {
+			new = strings.TrimSuffix(name, Suffix[0][0])
+		} else {
+			new = name
+		}
+
+		if _, ok := tables[new]; !ok {
+			row[0] = sqltypes.MakeTrusted(row[0].Type(), []byte(new))
+			tables[new] = new
+			newqr.Rows = append(newqr.Rows, row)
+		}
+	}
+
+	len := len(newqr.Rows)
+	qr.RowsAffected = uint64(len)
+	qr.Rows = qr.Rows[0:0]
+	qr.Rows = append(qr.Rows, newqr.Rows...)
+	return qr, nil
 }
 
 // handleShowTables used to handle the 'SHOW TABLES' command.

@@ -25,6 +25,15 @@ func TestShow1(t *testing.T) {
 		output string
 	}{
 		{
+			input:  "show table status from sbtest",
+			output: "show table status from sbtest",
+		},
+		{
+			input:  "show table status",
+			output: "show table status",
+		},
+
+		{
 			input:  "show create table t1",
 			output: "show create table t1",
 		},

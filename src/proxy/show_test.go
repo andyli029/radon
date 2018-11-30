@@ -22,6 +22,71 @@ import (
 	"github.com/xelabs/go-mysqlstack/xlog"
 )
 
+
+var (
+	showTableStatusResult1 = &sqltypes.Result{
+		RowsAffected: 7,
+		Fields: []*querypb.Field{
+			{
+				Name: "Name",
+				Type: querypb.Type_VARCHAR,
+			},
+		},
+		Rows: [][]sqltypes.Value{
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("a_0000")),
+			},
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("a_0001")),
+			},
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("b_0000")),
+			},
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("b_0001")),
+			},
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("c")),
+			},
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("d")),
+			},
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("e_0002_0003")),
+			},
+		},
+	}
+
+	showTableStatusResult2 = &sqltypes.Result{
+		RowsAffected: 5,
+		Fields: []*querypb.Field{
+			{
+				Name: "Name",
+				Type: querypb.Type_VARCHAR,
+			},
+		},
+		Rows: [][]sqltypes.Value{
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("a")),
+			},
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("b")),
+
+			},
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("c")),
+
+			},
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("d")),
+			},
+			{
+				sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte("e_0002")),
+			},
+		},
+	}
+)
+
 func TestProxyShowDatabases(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	fakedbs, proxy, cleanup := MockProxy(log)
@@ -133,6 +198,53 @@ func TestProxyShowTables(t *testing.T) {
 		assert.NotNil(t, err)
 	}
 }
+
+func TestProxyShowTableStatus(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	fakedbs, proxy, cleanup := MockProxy(log)
+	defer cleanup()
+	address := proxy.Address()
+
+	// fakedbs.
+	{
+		fakedbs.AddQueryPattern("use .*", &sqltypes.Result{})
+		fakedbs.AddQueryPattern("show table status .*", showTableStatusResult1)
+		fakedbs.AddQueryPattern("create .*", &sqltypes.Result{})
+	}
+
+	// show tables.
+	{
+		client, err := driver.NewConn("mock", "mock", address, "test", "utf8")
+		assert.Nil(t, err)
+		defer client.Close()
+		query := "show table status"
+		got, err := client.FetchAll(query, -1)
+		assert.Nil(t, err)
+		want := showTableStatusResult2
+		assert.Equal(t, want, got)
+	}
+
+	// show tables error with null database.
+	{
+		client, err := driver.NewConn("mock", "mock", address, "", "utf8")
+		assert.Nil(t, err)
+		defer client.Close()
+		query := "show table status"
+		_, err = client.FetchAll(query, -1)
+		assert.NotNil(t, err)
+	}
+
+	// show tables error with sys database.
+	{
+		client, err := driver.NewConn("mock", "mock", address, "", "utf8")
+		assert.Nil(t, err)
+		defer client.Close()
+		query := "show table status from MYSQL"
+		_, err = client.FetchAll(query, -1)
+		assert.NotNil(t, err)
+	}
+}
+
 
 func TestProxyShowCreateTable(t *testing.T) {
 	r1 := &sqltypes.Result{

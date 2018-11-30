@@ -1040,6 +1040,10 @@ show_statement:
   {
     $$ = &Show{Type: ShowStatusStr}
   }
+| SHOW TABLE STATUS database_from_opt force_eof
+  {
+    $$ = &Show{Type: ShowTableStatusStr, Database: $4}
+  }
 
 binlog_from_opt:
   {
