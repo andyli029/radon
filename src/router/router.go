@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"config"
+	"xbase"
 
 	"github.com/pkg/errors"
 	"github.com/xelabs/go-mysqlstack/sqldb"
@@ -45,7 +46,7 @@ type Router struct {
 	log     *xlog.Log
 	mu      sync.RWMutex
 	metadir string
-	dbACL   *DatabaseACL
+	dbACL   *xbase.DatabaseACL
 	conf    *config.RouterConfig
 
 	// schemas map, key is database name
@@ -58,7 +59,7 @@ func NewRouter(log *xlog.Log, metadir string, conf *config.RouterConfig) *Router
 		log:     log,
 		metadir: metadir,
 		conf:    conf,
-		dbACL:   NewDatabaseACL(),
+		dbACL:   xbase.NewDatabaseACL(),
 		Schemas: make(map[string]*Schema),
 	}
 	return route
@@ -146,6 +147,11 @@ func (r *Router) DatabaseACL(database string) error {
 		return sqldb.NewSQLError(sqldb.ER_SPECIFIC_ACCESS_DENIED_ERROR, "Access denied; lacking privileges for database %s", database)
 	}
 	return nil
+}
+
+// IsSystemDB used to check wheather the database is a system database.
+func (r *Router) IsSystemDB(database string) bool {
+	return r.dbACL.IsSystemDB(database)
 }
 
 func (r *Router) getTable(database string, tableName string) (*Table, error) {

@@ -21,6 +21,7 @@ import (
 	"github.com/xelabs/go-mysqlstack/sqldb"
 	"github.com/xelabs/go-mysqlstack/sqlparser/depends/sqltypes"
 	"github.com/xelabs/go-mysqlstack/xlog"
+	"math/rand"
 )
 
 var (
@@ -532,6 +533,20 @@ func (txn *Txn) execute(req *xcontext.RequestContext) (*sqltypes.Result, error) 
 			oneShard(back, txn, qs)
 			break
 		}
+	// ReqRandom mode: execute on one Random shard of txn.backends.
+	case xcontext.ReqRandom:
+		qs := []string{req.RawQuery}
+		rand := rand.New(rand.NewSource(time.Now().UnixNano()))
+		index := rand.Intn(len(txn.backends))
+		i := 0
+		for back := range txn.backends {
+			if i == index {
+				wg.Add(1)
+				oneShard(back, txn, qs)
+				break
+			}
+			i = i + 1
+		}
 	// ReqScatter mode: execute on the all shards of txn.backends.
 	case xcontext.ReqScatter:
 		qs := []string{req.RawQuery}
@@ -828,6 +843,15 @@ func (txn *Txn) ExecuteSingle(query string) (*sqltypes.Result, error) {
 	rctx := &xcontext.RequestContext{
 		RawQuery: query,
 		Mode:     xcontext.ReqSingle,
+	}
+	return txn.Execute(rctx)
+}
+
+// ExecuteRandom used to execute query on one random shard.
+func (txn *Txn) ExecuteRandom(query string) (*sqltypes.Result, error) {
+	rctx := &xcontext.RequestContext{
+		RawQuery: query,
+		Mode:     xcontext.ReqRandom,
 	}
 	return txn.Execute(rctx)
 }

@@ -224,9 +224,15 @@ func (spanner *Spanner) ComQuery(session *driver.Session, query string, callback
 						log.Error("proxy.select[%s].from.session[%v].error:%+v", query, session.ID(), err)
 					}
 				} else {
-					// e.g.: select a from table [as] aliasTable;
-					if qr, err = spanner.handleSelect(session, query, node); err != nil {
-						log.Error("proxy.select[%s].from.session[%v].error:%+v", query, session.ID(), err)
+					if ok && spanner.router.IsSystemDB(tb.Qualifier.String()) {
+						if qr, err = spanner.ExecuteRandom(query); err != nil {
+							log.Error("proxy.select[%s].from.session[%v].error:%+v", query, session.ID(), err)
+						}
+					} else {
+						// e.g.: select a from table [as] aliasTable;
+						if qr, err = spanner.handleSelect(session, query, node); err != nil {
+							log.Error("proxy.select[%s].from.session[%v].error:%+v", query, session.ID(), err)
+						}
 					}
 				}
 				spanner.auditLog(session, R, xbase.SELECT, query, qr)

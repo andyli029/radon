@@ -6,7 +6,7 @@
  *
  */
 
-package router
+package xbase
 
 import (
 	"strings"
@@ -34,6 +34,15 @@ func NewDatabaseACL() *DatabaseACL {
 func (acl *DatabaseACL) Allow(db string) bool {
 	db = strings.ToUpper(db)
 	if _, ok := acl.acls[db]; !ok {
+		return true
+	}
+	return false
+}
+
+// IsSystemDB used to check to see if the db is system database.
+func (acl *DatabaseACL) IsSystemDB(db string) bool {
+	db = strings.ToUpper(db)
+	if _, ok := acl.acls[db]; ok {
 		return true
 	}
 	return false
