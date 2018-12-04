@@ -39,6 +39,12 @@ func (spanner *Spanner) handleShowCreateDatabase(session *driver.Session, query 
 	return spanner.ExecuteSingle(query)
 }
 
+// handleShowTablesWrapper
+func (spanner *Spanner) handleShowTablesWrapper(session *driver.Session, query string, node sqlparser.Statement) (*sqltypes.Result, error) {
+	// TODO(andy): need to support: SHOW [FULL] TABLES [FROM db_name] [like_or_where]
+	return spanner.handleShowTables(session, query, node)
+}
+
 // handleShowTables used to handle the 'SHOW TABLES' command.
 func (spanner *Spanner) handleShowTables(session *driver.Session, query string, node sqlparser.Statement) (*sqltypes.Result, error) {
 	router := spanner.router
