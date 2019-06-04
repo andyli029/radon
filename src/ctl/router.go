@@ -31,7 +31,8 @@ func (admin *Admin) NewRouter() (rest.App, error) {
 		rest.Delete("/v1/radon/backend/:name", v1.RemoveBackendHandler(log, proxy)),
 		rest.Get("/v1/radon/restapiaddress", v1.RestAPIAddressHandler(log, proxy)),
 		rest.Get("/v1/radon/status", v1.StatusHandler(log, proxy)),
-
+		rest.Post("/v1/radon/attach", v1.AddAttachHandler(log, proxy)),
+		rest.Delete("/v1/radon/attach/:name", v1.RemoveAttachHandler(log, proxy)),
 		// user
 		rest.Post("/v1/user/add", v1.CreateUserHandler(log, proxy)),
 		rest.Post("/v1/user/update", v1.AlterUserHandler(log, proxy)),

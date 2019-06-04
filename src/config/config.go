@@ -145,6 +145,7 @@ type BackendConfig struct {
 	DBName         string `json:"database"`
 	Charset        string `json:"charset"`
 	MaxConnections int    `json:"max-connections"`
+	IsAttach       bool   `json:"isAttach"`
 }
 
 // BackendsConfig tuple.
