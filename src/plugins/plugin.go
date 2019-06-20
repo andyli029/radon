@@ -13,6 +13,7 @@ import (
 	"config"
 	"router"
 
+	"plugins/attach"
 	"plugins/autoincrement"
 	"plugins/privilege"
 
@@ -27,6 +28,7 @@ type Plugin struct {
 	scatter       *backend.Scatter
 	autoincrement autoincrement.AutoIncrementHandler
 	privilege     privilege.PrivilegeHandler
+	attach        attach.AttachHandler
 }
 
 // NewPlugin -- creates new Plugin.
@@ -60,6 +62,13 @@ func (plugin *Plugin) Init() error {
 	}
 	plugin.privilege = privilegePlug
 
+	// Register attach plug.
+	attachPlug := attach.NewAttach(log, scatter, router)
+	if err := attachPlug.Init(); err != nil {
+		return err
+	}
+	plugin.attach = attachPlug
+
 	return nil
 }
 
@@ -77,4 +86,9 @@ func (plugin *Plugin) PlugAutoIncrement() autoincrement.AutoIncrementHandler {
 // PlugPrivilege -- return Privilege plug.
 func (plugin *Plugin) PlugPrivilege() privilege.PrivilegeHandler {
 	return plugin.privilege
+}
+
+// PlugAttach -- return Attach plug.
+func (plugin *Plugin) PlugAttach() attach.AttachHandler {
+	return plugin.attach
 }
