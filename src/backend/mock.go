@@ -10,6 +10,7 @@ package backend
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"config"
@@ -133,6 +134,30 @@ func MockScatter(log *xlog.Log, n int) (*Scatter, *fakedb.DB, func()) {
 	return scatter, fakedb, func() {
 		fakedb.Close()
 		scatter.Close()
+	}
+}
+
+// MockScatterTmpDir used to mock a scatter with tmp dir.
+func MockScatterTmpDir(log *xlog.Log, n int) (*Scatter, *fakedb.DB, func()) {
+	mockTmpDir := fakedb.GetTmpDir("/tmp", "radon_backend_", log)
+	scatter := NewScatter(log, mockTmpDir)
+	fakedb := fakedb.New(log, n)
+	backends := make(map[string]*Pool)
+	addrs := fakedb.Addrs()
+	for i, addr := range addrs {
+		name := fmt.Sprintf("backend%d", i)
+		conf := MockBackendConfigDefault(name, addr)
+		pool := NewPool(log, conf)
+		backends[name] = pool
+	}
+	scatter.backends = backends
+
+	return scatter, fakedb, func() {
+		fakedb.Close()
+		scatter.Close()
+		if err := os.RemoveAll(mockTmpDir); err != nil {
+			panic(err)
+		}
 	}
 }
 
