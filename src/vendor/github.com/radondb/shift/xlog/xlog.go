@@ -130,7 +130,7 @@ func (t *Log) Fatal(format string, v ...interface{}) {
 		return
 	}
 	t.log("\t  [FATAL+EXIT]  \t%s", fmt.Sprintf(format, v...))
-	os.Exit(0)
+	//os.Exit(0)
 }
 
 func (t *Log) Panic(format string, v ...interface{}) {

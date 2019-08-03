@@ -307,6 +307,10 @@ func (shift *Shift) behindsCheckStart() error {
 		prePos := s.canal.SyncedPosition()
 
 		for range s.behindsTicker.C {
+			if s.allDone {
+				break
+			}
+
 			// If canal get something wrong during dumping or syncing data, we should log error
 			if s.GetCanalStatus() {
 				masterPos := s.masterPosition()

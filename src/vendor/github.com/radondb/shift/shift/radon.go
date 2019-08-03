@@ -159,14 +159,14 @@ func (shift *Shift) setRadon() {
 	}
 
 	// 5. Set radon rule.
-	{
-		log.Info("shift.set.radon.rule...")
-		if err := shift.setRadonRule(); err != nil {
-			shift.panicMe("shift.set.radon.rule.error:%+v", err)
-			return
-		}
-		log.Info("shift.set.radon.rule.done...")
-	}
+	//{
+	//	log.Info("shift.set.radon.rule...")
+	//	if err := shift.setRadonRule(); err != nil {
+	//		shift.panicMe("shift.set.radon.rule.error:%+v", err)
+	//		return
+	//	}
+	//	log.Info("shift.set.radon.rule.done...")
+	//}
 
 	// 6. Set radon to read/write.
 	{

@@ -62,7 +62,7 @@ func (h *EventHandler) InsertRadonDBRow(e *canal.RowsEvent, systemTable bool) {
 	}
 
 	if conn = h.shift.toPool.Get(); conn == nil {
-		h.shift.panicMe("shift.insert.get.to.conn.nil.error")
+		h.shift.log.Error("shift.insert.get.to.conn.nil.error")
 	}
 	// Binlog sync.
 	if e.Header != nil {
