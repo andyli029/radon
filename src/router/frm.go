@@ -159,6 +159,16 @@ func (r *Router) DropDatabase(db string) error {
 	return nil
 }
 
+func (r *Router) CheckDatabase(db string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, ok := r.Schemas[db]; !ok {
+		return errors.Errorf("router.can.not.find.db[%v]", db)
+	}
+	return nil
+}
+
 // CreateTable used to add a table to router and flush the schema to disk.
 // Lock.
 func (r *Router) CreateTable(db, table, shardKey string, tableType string, backends []string, extra *Extra) error {
