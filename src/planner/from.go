@@ -120,6 +120,12 @@ func scanAliasedTableExpr(log *xlog.Log, r *router.Router, database string, tabl
 				tableExpr.As = sqlparser.NewTableIdent(tn.tableName)
 			}
 			mn.nonGlobalCnt = 1
+		case "LIST":
+			// if a shard table hasn't alias, create one in order to push.
+			if tableExpr.As.String() == "" {
+				tableExpr.As = sqlparser.NewTableIdent(tn.tableName)
+			}
+			mn.nonGlobalCnt = 1
 		}
 
 		tn.parent = mn
