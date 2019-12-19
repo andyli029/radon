@@ -92,9 +92,9 @@ func (p *Privilege) Init() error {
 		for {
 			select {
 			case <-gp.ticker.C:
-				if err := gp.UpdatePrivileges(); err != nil {
-					log.Error("plugin.privilege.update.privilege.error:%+v", err)
-				}
+				//if err := gp.UpdatePrivileges(); err != nil {
+				//	log.Error("plugin.privilege.update.privilege.error:%+v", err)
+				//}
 			case <-gp.done:
 				return
 			}

@@ -48,6 +48,7 @@ type Connection interface {
 	Execute(string) (*sqltypes.Result, error)
 	ExecuteStreamFetch(string) (driver.Rows, error)
 	ExecuteWithLimits(query string, timeout int, maxmem int) (*sqltypes.Result, error)
+	ExecuteNext(string) (driver.Rows, error)
 }
 
 type connection struct {
@@ -221,6 +222,10 @@ func (c *connection) ExecuteWithLimits(query string, timeout int, memlimits int)
 }
 
 func (c *connection) ExecuteStreamFetch(query string) (driver.Rows, error) {
+	return c.driver.Query(query)
+}
+
+func (c *connection) ExecuteNext(query string) (driver.Rows, error) {
 	return c.driver.Query(query)
 }
 

@@ -656,6 +656,29 @@ func (txn *Txn) ExecuteStreamFetch(req *xcontext.RequestContext, callback func(*
 	return callback(finishQr)
 }
 
+func (txn *Txn) ExecuteVolcanoStreamFetch(req *xcontext.RequestContext) (cursors []driver.Rows, err error) {
+
+	defer func() {
+
+	}()
+
+	for _, qt := range req.Querys {
+		var conn Connection
+		if conn, err = txn.fetchOneConnection(qt.Backend); err != nil {
+			return nil, err
+		}
+
+		cursor, x := conn.ExecuteNext(qt.Query)
+		if x != nil {
+			return nil, x
+		}
+		cursors = append(cursors, cursor)
+		//return cursor, nil
+	}
+
+	return cursors, nil
+}
+
 // ExecuteScatter used to execute query on all shards.
 func (txn *Txn) ExecuteScatter(query string) (*sqltypes.Result, error) {
 	rctx := &xcontext.RequestContext{

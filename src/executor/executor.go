@@ -101,3 +101,28 @@ func (et *Tree) Execute() (*sqltypes.Result, error) {
 	}
 	return rsCtx.Results, nil
 }
+
+// VolcanoExecute executes all Executor.Execute
+func (et *Tree) VolcanoExecute() (*sqltypes.Result, error) {
+	// build tree
+	for _, plan := range et.planTree.Plans() {
+		switch plan.Type() {
+		case planner.PlanTypeSelect:
+			executor := NewSelectExecutor(et.log, plan, et.txn)
+			if err := et.Add(executor); err != nil {
+				return nil, err
+			}
+		default:
+			return nil, errors.Errorf("unsupported.execute.type:%v", plan.Type())
+		}
+	}
+
+	// execute all
+	rsCtx := xcontext.NewResultContext()
+	for _, executor := range et.children {
+		if err := executor.Execute(rsCtx); err != nil {
+			return nil, err
+		}
+	}
+	return rsCtx.Results, nil
+}

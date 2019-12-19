@@ -151,3 +151,15 @@ func (spanner *Spanner) isTwoPC() bool {
 func (spanner *Spanner) isAutocommitFalseIsTxn() bool {
 	return spanner.conf.Proxy.AutocommitFalseIsTxn
 }
+
+func (spanner *Spanner) Router() *router.Router {
+	return spanner.router
+}
+
+func (spanner *Spanner) Scatter() *backend.Scatter {
+	return spanner.scatter
+}
+
+func (spanner *Spanner) Sessions() *Sessions {
+	return spanner.sessions
+}

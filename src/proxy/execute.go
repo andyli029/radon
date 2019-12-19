@@ -209,7 +209,8 @@ func (spanner *Spanner) ExecuteDML(session *driver.Session, database string, que
 		txSession := spanner.sessions.getTxnSession(session)
 		if spanner.IsDML(node) {
 			if txSession.transaction == nil {
-				return spanner.ExecuteSingleStmtTxnTwoPC(session, database, query, node)
+				//return spanner.ExecuteSingleStmtTxnTwoPC(session, database, query, node)
+				return spanner.ExecuteVolcanoSingleStmtTxnTwoPC(session, database, query, node)
 			} else {
 				return spanner.ExecuteMultiStmtsInTxn(session, database, query, node)
 			}
@@ -257,4 +258,59 @@ func (spanner *Spanner) ExecuteOnThisBackend(backend string, query string) (*sql
 	}
 	defer txn.Finish()
 	return txn.ExecuteOnThisBackend(backend, query)
+}
+
+// ExecuteVolcanoSingleStmtTxnTwoPC used to execute single statement transaction with 2pc commit.
+func (spanner *Spanner) ExecuteVolcanoSingleStmtTxnTwoPC(session *driver.Session, database string, query string, node sqlparser.Statement) (*sqltypes.Result, error) {
+	log := spanner.log
+	conf := spanner.conf
+	//router := spanner.router
+	scatter := spanner.scatter
+	sessions := spanner.sessions
+
+	// transaction.
+	txn, err := scatter.CreateTransaction()
+	if err != nil {
+		log.Error("spanner.txn.create.error:[%v]", err)
+		return nil, err
+	}
+	defer txn.Finish()
+
+	// txn limits.
+	txn.SetTimeout(conf.Proxy.QueryTimeout)
+	txn.SetMaxResult(conf.Proxy.MaxResultSize)
+	txn.SetMaxJoinRows(conf.Proxy.MaxJoinRows)
+
+	// binding.
+	sessions.TxnBinding(session, txn, node, query)
+	defer sessions.TxnUnBinding(session)
+
+	// Transaction begin.
+	//if err := txn.Begin(); err != nil {
+	//	log.Error("spanner.execute.2pc.txn.begin.error:[%v]", err)
+	//	return nil, err
+	//}
+
+	// Transaction execute.
+	//qr, err := optimizer.NewSimpleOptimizer(log, database, query, node, router).ExecuteVolcano()
+	qr, err := ExecuteVolcano(node, database, spanner)
+	if err != nil {
+		return nil, err
+	}
+
+	//executors := executor.NewTree(log, plans, txn)
+	//qr, err := executors.VolcanoExecute()
+	//if err != nil {
+	//	if x := txn.Rollback(); x != nil {
+	//		log.Error("spanner.execute.2pc.error.to.rollback.still.error:[%v]", x)
+	//	}
+	//	return nil, err
+	//}
+
+	// Transaction commit.
+	//if err := txn.Commit(); err != nil {
+	//	log.Error("spanner.execute.2pc.txn.commit.error:[%v]", err)
+	//	return nil, err
+	//}
+	return qr, nil
 }

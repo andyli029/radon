@@ -45,6 +45,8 @@ type Conn interface {
 	FetchAll(sql string, maxrows int) (*sqltypes.Result, error)
 	FetchAllWithFunc(sql string, maxrows int, fn Func) (*sqltypes.Result, error)
 	ComStatementPrepare(sql string) (*Statement, error)
+
+	Next(sql string) (*sqltypes.Result, error)
 }
 
 type conn struct {
@@ -302,6 +304,45 @@ func (c *conn) FetchAllWithFunc(sql string, maxrows int, fn Func) (*sqltypes.Res
 		if len(qrRows) == maxrows {
 			break
 		}
+		if qrRow, err = iRows.RowValues(); err != nil {
+			c.Cleanup()
+			return nil, err
+		}
+		if qrRow != nil {
+			qrRows = append(qrRows, qrRow)
+		}
+	}
+
+	// Drain the results and check last error.
+	if err := iRows.Close(); err != nil {
+		c.Cleanup()
+		return nil, err
+	}
+
+	rowsAffected := iRows.RowsAffected()
+	if rowsAffected == 0 {
+		rowsAffected = uint64(len(qrRows))
+	}
+	qr := &sqltypes.Result{
+		Fields:       iRows.Fields(),
+		RowsAffected: rowsAffected,
+		InsertID:     iRows.LastInsertID(),
+		Rows:         qrRows,
+	}
+	return qr, err
+}
+
+func (c *conn) Next(sql string) (*sqltypes.Result, error) {
+	var err error
+	var iRows Rows
+	var qrRow []sqltypes.Value
+	var qrRows [][]sqltypes.Value
+
+	if iRows, err = c.comQuery(sqldb.COM_QUERY, common.StringToBytes(sql)); err != nil {
+		return nil, err
+	}
+
+	for iRows.Next() {
 		if qrRow, err = iRows.RowValues(); err != nil {
 			c.Cleanup()
 			return nil, err
