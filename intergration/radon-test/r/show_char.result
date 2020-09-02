@@ -266,3 +266,13 @@ geostd8	GEOSTD8 Georgian	geostd8_general_ci	1
 cp932	SJIS for Windows Japanese	cp932_japanese_ci	2
 eucjpms	UJIS for Windows Japanese	eucjpms_japanese_ci	3
 gb18030	China National Standard GB18030	gb18030_chinese_ci	4
+
+show collation where Id=248;
+Collation	Charset	Id	Default	Compiled	Sortlen
+gb18030_chinese_ci	gb18030	248	Yes	Yes	2
+
+show collation like 'gb18030%';
+Collation	Charset	Id	Default	Compiled	Sortlen
+gb18030_chinese_ci	gb18030	248	Yes	Yes	2
+gb18030_bin	gb18030	249		Yes	1
+gb18030_unicode_520_ci	gb18030	250		Yes	8

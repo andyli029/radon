@@ -71,6 +71,10 @@ func TestShow1(t *testing.T) {
 			output: "show databases",
 		},
 		{
+			input:  "show databases like '%aa%'",
+			output: "show databases like '%aa%'",
+		},
+		{
 			input:  "show create database sbtest",
 			output: "show create database sbtest",
 		},
@@ -205,6 +209,18 @@ func TestShow1(t *testing.T) {
 		{
 			input:  "show charset",
 			output: "show charset",
+		},
+		{
+			input:  "show collation like 'gb18030_bin'",
+			output: "show collation like 'gb18030_bin'",
+		},
+		{
+			input:  "show charset like 'utf32'",
+			output: "show charset like 'utf32'",
+		},
+		{
+			input:  "show collation where Id=248",
+			output: "show collation where Id = 248",
 		},
 	}
 

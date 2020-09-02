@@ -2915,9 +2915,9 @@ show_statement:
 	{
 		$$ = &Show{Type: ShowCreateDatabaseStr, Database: $4.v}
 	}
-|	SHOW DATABASES force_eof
+|	SHOW DATABASES like_or_where_opt
 	{
-		$$ = &Show{Type: ShowDatabasesStr}
+		$$ = &Show{Type: ShowDatabasesStr, Filter: $3}
 	}
 |	SHOW ENGINES force_eof
 	{
@@ -2977,13 +2977,13 @@ show_statement:
 	{
 		$$ = &Show{Type: ShowWarningsStr}
 	}
-|	SHOW COLLATION force_eof
+|	SHOW COLLATION like_or_where_opt
 	{
-		$$ = &Show{Type: ShowCollationStr}
+		$$ = &Show{Type: ShowCollationStr, Filter: $3}
 	}
-|	SHOW CHARSET force_eof
+|	SHOW CHARSET like_or_where_opt
 	{
-		$$ = &Show{Type: ShowCharsetStr}
+		$$ = &Show{Type: ShowCharsetStr, Filter: $3}
 	}
 |	SHOW ID force_eof
 	{

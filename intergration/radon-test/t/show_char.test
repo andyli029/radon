@@ -1,2 +1,4 @@
 show collation;
 show charset;
+show collation where Id=248;
+show collation like 'gb18030%';

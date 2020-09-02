@@ -1132,6 +1132,11 @@ func (node *Show) Format(buf *TrackedBuffer) {
 		if node.Filter != nil {
 			buf.Myprintf("%v", node.Filter)
 		}
+	case ShowDatabasesStr, ShowCollationStr, ShowCharsetStr:
+		buf.Myprintf("show %s", node.Type)
+		if node.Filter != nil {
+			buf.Myprintf("%v", node.Filter)
+		}
 	case ShowBinlogEventsStr:
 		buf.Myprintf("show %s", node.Type)
 		if node.From != "" {
